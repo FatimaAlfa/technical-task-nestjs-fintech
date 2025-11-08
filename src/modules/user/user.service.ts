@@ -77,4 +77,8 @@ export class UserService {
       total,
     };
   }
+
+  findById(id: string) {
+    return this.userModel.findById(id);
+  }
 }
