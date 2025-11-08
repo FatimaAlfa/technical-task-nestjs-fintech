@@ -6,6 +6,7 @@ import { JwtAuthGuard } from './common/guards/auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { MerchantModule } from './modules/merchant/merchant.module';
 import { UserModule } from './modules/user/user.module';
+import { TransactionModule } from './modules/transaction/transaction.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { UserModule } from './modules/user/user.module';
     }),
     UserModule,
     MerchantModule,
+    TransactionModule,
   ],
   controllers: [],
   providers: [

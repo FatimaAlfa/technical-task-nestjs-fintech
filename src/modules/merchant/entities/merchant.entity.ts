@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import mongoose, { HydratedDocument } from 'mongoose';
 import * as currencyCodes from 'currency-codes';
+import { User } from 'src/modules/user/entities/user.entity';
 
 export type MerchantDocument = HydratedDocument<Merchant>;
 
@@ -8,7 +9,11 @@ export type MerchantDocument = HydratedDocument<Merchant>;
 export class Merchant {
   _id: string;
 
-  @Prop({ type: String, required: true })
+  @Prop({
+    type: mongoose.Schema.Types.ObjectId,
+    ref: User.name,
+    required: true,
+  })
   userId: string;
 
   @Prop({ type: String, required: true })

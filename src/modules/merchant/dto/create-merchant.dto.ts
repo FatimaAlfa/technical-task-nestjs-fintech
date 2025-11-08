@@ -64,9 +64,4 @@ export class CreateMerchantDto {
   @MinLength(8)
   @IsNotEmpty()
   password: string;
-
-  @ApiProperty({ type: String, example: 'Password123' })
-  @IsString()
-  @IsNotEmpty()
-  confirmPassword: string;
 }
