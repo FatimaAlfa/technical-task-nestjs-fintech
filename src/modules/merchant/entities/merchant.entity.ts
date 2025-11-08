@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
+import * as currencyCodes from 'currency-codes';
 
 export type MerchantDocument = HydratedDocument<Merchant>;
 
@@ -13,7 +14,7 @@ export class Merchant {
   @Prop({ type: String, required: true })
   name: string;
 
-  @Prop({ type: String, required: true })
+  @Prop({ type: String, enum: currencyCodes.codes(), required: true })
   currency: string;
 
   @Prop({ type: Number, required: true })

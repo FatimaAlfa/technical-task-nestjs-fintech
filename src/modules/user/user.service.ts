@@ -17,8 +17,8 @@ export class UserService {
   private setJwtCookie(res: any, token: string) {
     res.cookie('jwt', token, {
       httpOnly: true,
-      sameSite: 'none',
-      secure: true,
+      sameSite: 'lax',
+      secure: false,
       maxAge: 24 * 60 * 60 * 1000,
     });
   }
@@ -49,7 +49,7 @@ export class UserService {
     };
     const token = this.jwtService.sign(payload);
     this.setJwtCookie(res, token);
-    return { message: 'Login successful' };
+    return { message: 'Login successful', token };
   }
 
   async findAll(paginationDto: PaginationDto) {
@@ -80,5 +80,9 @@ export class UserService {
 
   findById(id: string) {
     return this.userModel.findById(id);
+  }
+
+  findByEmail(email: string) {
+    return this.userModel.findOne({ email: email.toLowerCase() });
   }
 }

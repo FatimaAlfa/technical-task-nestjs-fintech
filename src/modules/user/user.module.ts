@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
-import { UserService } from './user.service';
-import { UserController } from './user.controller';
-import { User, UserSchema } from './entities/user.entity';
+import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
 import { PassportModule } from '@nestjs/passport';
-import { JwtModule } from '@nestjs/jwt';
+import { User, UserSchema } from './entities/user.entity';
+import { JwtStrategy } from './jwt.strategy';
+import { UserController } from './user.controller';
+import { UserService } from './user.service';
 
 @Module({
   imports: [
@@ -12,11 +13,12 @@ import { JwtModule } from '@nestjs/jwt';
     PassportModule,
     JwtModule.register({
       global: true,
-      secret: `${process.env.JWT_SECRET}`,
-      signOptions: { expiresIn: '5d' },
+      secret: process.env.JWT_SECRET || 'secret',
+      signOptions: { expiresIn: '1d' },
     }),
   ],
   controllers: [UserController],
-  providers: [UserService],
+  providers: [UserService, JwtStrategy],
+  exports: [UserService],
 })
 export class UserModule {}

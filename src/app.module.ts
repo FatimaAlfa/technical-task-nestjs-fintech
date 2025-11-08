@@ -3,8 +3,9 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { MongooseModule } from '@nestjs/mongoose';
 import { JwtAuthGuard } from './common/guards/auth.guard';
-import { UserModule } from './modules/user/user.module';
+import { RolesGuard } from './common/guards/roles.guard';
 import { MerchantModule } from './modules/merchant/merchant.module';
+import { UserModule } from './modules/user/user.module';
 
 @Module({
   imports: [
@@ -22,6 +23,10 @@ import { MerchantModule } from './modules/merchant/merchant.module';
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
     },
   ],
 })
