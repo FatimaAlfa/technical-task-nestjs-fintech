@@ -1,10 +1,10 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import cookieParser from 'cookie-parser';
 import { json, urlencoded } from 'express';
 import basicAuth from 'express-basic-auth';
 import helmet from 'helmet';
-
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 
@@ -56,6 +56,8 @@ async function bootstrap() {
 
     credentials: true,
   });
+
+  app.use(cookieParser());
   app.use(helmet());
   app.use(json({ limit: '50mb' }));
   app.use(urlencoded({ extended: true, limit: '50mb' }));
