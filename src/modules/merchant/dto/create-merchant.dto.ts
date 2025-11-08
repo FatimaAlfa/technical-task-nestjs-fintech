@@ -37,7 +37,7 @@ export class CreateMerchantDto {
     description: 'Merchant currency',
     example: 'USD',
   })
-  @IsEnum(currencyCodes.codes())
+  @IsEnum(currencyCodes.codes(), { message: 'Unsupported currency' })
   @Transform(({ value }) => value.toUpperCase())
   @IsNotEmpty()
   currency: string;

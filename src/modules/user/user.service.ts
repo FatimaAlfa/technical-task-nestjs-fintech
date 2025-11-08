@@ -49,7 +49,7 @@ export class UserService {
     };
     const token = this.jwtService.sign(payload);
     this.setJwtCookie(res, token);
-    return { message: 'Login successful', token };
+    return { message: 'Login successful' };
   }
 
   async findAll(paginationDto: PaginationDto) {

@@ -65,7 +65,13 @@ export class MerchantService {
   }
 
   async findById(id: string) {
-    return this.merchantModel.findById(id);
+    const merchant = await this.merchantModel
+      .findById(id)
+      .populate('userId', '-password');
+    if (!merchant) {
+      throw new BadRequestException('Merchant not found');
+    }
+    return merchant;
   }
 
   async update(id: string, updateMerchantDto: UpdateMerchantDto) {
@@ -74,20 +80,29 @@ export class MerchantService {
       throw new BadRequestException('Merchant not found');
     }
 
-    if (updateMerchantDto.currency) {
-      const isValidCurrency = this.validateCurrency(updateMerchantDto.currency);
-      if (!isValidCurrency) {
-        throw new BadRequestException('Unsupported currency');
-      }
-    }
-
-    if (updateMerchantDto.email) {
-      const session = await this.connection.startSession();
-      session.startTransaction();
-      try {
-        const user = await this.userService.findByEmail(
-          updateMerchantDto.email,
+    const session = await this.connection.startSession();
+    session.startTransaction();
+    try {
+      if (updateMerchantDto.currency) {
+        const isValidCurrency = this.validateCurrency(
+          updateMerchantDto.currency,
         );
+        if (!isValidCurrency) {
+          throw new BadRequestException('Unsupported currency');
+        }
+        merchant.currency = updateMerchantDto.currency;
+      }
+
+      if (updateMerchantDto.name) {
+        merchant.name = updateMerchantDto.name;
+      }
+
+      if (updateMerchantDto.balance !== undefined) {
+        merchant.balance = updateMerchantDto.balance;
+      }
+
+      if (updateMerchantDto.email) {
+        const user = await this.userService.findById(merchant.userId);
         if (!user) {
           throw new BadRequestException('User not found');
         }
@@ -95,20 +110,25 @@ export class MerchantService {
         const existingEmail = await this.userService.findByEmail(
           updateMerchantDto.email,
         );
-        if (existingEmail) {
+        if (
+          existingEmail &&
+          existingEmail._id.toString() !== user._id.toString()
+        ) {
           throw new BadRequestException('Email already exists');
         }
 
         user.email = updateMerchantDto.email;
-        await user.save();
-        await merchant.save();
-        await session.commitTransaction();
-      } catch (error) {
-        await session.abortTransaction();
-        throw error;
-      } finally {
-        await session.endSession();
+        await user.save({ session });
       }
+
+      await merchant.save({ session });
+      await session.commitTransaction();
+      return { message: 'Merchant updated successfully', merchant };
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      await session.endSession();
     }
   }
 }

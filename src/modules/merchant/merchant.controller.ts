@@ -1,7 +1,17 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  ForbiddenException,
+  Get,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
+import { GetUser } from 'src/common/decorators/get-user.decorator';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { BearerAuthPackDecorator } from 'src/common/decorators/swagger.decorator';
+import type { UserDocument } from '../user/entities/user.entity';
 import { UserRole } from '../user/enums/user.enum';
 import { CreateMerchantDto } from './dto/create-merchant.dto';
 import { UpdateMerchantDto } from './dto/update-merchant.dto';
@@ -20,6 +30,18 @@ export class MerchantController {
   }
 
   @Roles(UserRole.ADMIN, UserRole.MERCHANT)
+  @ApiOperation({ summary: 'Get a merchant by id' })
+  @Get(':id')
+  findById(@Param('id') id: string, @GetUser() user: UserDocument) {
+    if (user.role !== UserRole.ADMIN && user._id.toString() !== id) {
+      throw new ForbiddenException(
+        'You are not authorized to access this resource',
+      );
+    }
+    return this.merchantService.findById(id);
+  }
+
+  @Roles(UserRole.ADMIN, UserRole.MERCHANT)
   @ApiOperation({ summary: 'Update a merchant' })
   @Patch(':id')
   update(
@@ -27,12 +49,5 @@ export class MerchantController {
     @Body() updateMerchantDto: UpdateMerchantDto,
   ) {
     return this.merchantService.update(id, updateMerchantDto);
-  }
-
-  @Roles(UserRole.ADMIN, UserRole.MERCHANT)
-  @ApiOperation({ summary: 'Get a merchant by id' })
-  @Get(':id')
-  findById(@Param('id') id: string) {
-    return this.merchantService.findById(id);
   }
 }

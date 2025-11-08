@@ -16,10 +16,12 @@ export class UpdateMerchantDto {
     type: String,
     description: 'Merchant name',
     example: 'Merchant 1',
+    required: false,
   })
   @IsString()
   @IsNotEmpty()
-  name: string;
+  @IsOptional()
+  name?: string;
 
   @ApiProperty({
     type: String,

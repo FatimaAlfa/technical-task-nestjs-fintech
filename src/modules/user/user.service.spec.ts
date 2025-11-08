@@ -144,8 +144,8 @@ describe('UserService', () => {
       });
       expect(mockResponse.cookie).toHaveBeenCalledWith('jwt', mockToken, {
         httpOnly: true,
-        sameSite: 'none',
-        secure: true,
+        sameSite: 'lax',
+        secure: false,
         maxAge: 24 * 60 * 60 * 1000,
       });
       expect(result).toEqual({
