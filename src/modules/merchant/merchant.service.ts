@@ -80,6 +80,11 @@ export class MerchantService {
       throw new BadRequestException('Merchant not found');
     }
 
+    const user = await this.userService.findById(merchant.userId);
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
     const session = await this.connection.startSession();
     session.startTransaction();
     try {
@@ -95,6 +100,8 @@ export class MerchantService {
 
       if (updateMerchantDto.name) {
         merchant.name = updateMerchantDto.name;
+        user.name = updateMerchantDto.name;
+        await user.save({ session });
       }
 
       if (updateMerchantDto.balance !== undefined) {
@@ -102,11 +109,6 @@ export class MerchantService {
       }
 
       if (updateMerchantDto.email) {
-        const user = await this.userService.findById(merchant.userId);
-        if (!user) {
-          throw new BadRequestException('User not found');
-        }
-
         const existingEmail = await this.userService.findByEmail(
           updateMerchantDto.email,
         );

@@ -32,22 +32,36 @@ export class MerchantController {
   @Roles(UserRole.ADMIN, UserRole.MERCHANT)
   @ApiOperation({ summary: 'Get a merchant by id' })
   @Get(':id')
-  findById(@Param('id') id: string, @GetUser() user: UserDocument) {
-    if (user.role !== UserRole.ADMIN && user._id.toString() !== id) {
+  async findById(@Param('id') id: string, @GetUser() user: UserDocument) {
+    const merchant = await this.merchantService.findById(id);
+    if (
+      user.role !== UserRole.ADMIN &&
+      merchant.userId.toString() !== user._id.toString()
+    ) {
       throw new ForbiddenException(
         'You are not authorized to access this resource',
       );
     }
-    return this.merchantService.findById(id);
+    return merchant;
   }
 
   @Roles(UserRole.ADMIN, UserRole.MERCHANT)
   @ApiOperation({ summary: 'Update a merchant' })
   @Patch(':id')
-  update(
+  async update(
     @Param('id') id: string,
     @Body() updateMerchantDto: UpdateMerchantDto,
+    @GetUser() user: UserDocument,
   ) {
+    const merchant = await this.merchantService.findById(id);
+    if (
+      user.role !== UserRole.ADMIN &&
+      merchant.userId.toString() !== user._id.toString()
+    ) {
+      throw new ForbiddenException(
+        'You are not authorized to access this resource',
+      );
+    }
     return this.merchantService.update(id, updateMerchantDto);
   }
 }
