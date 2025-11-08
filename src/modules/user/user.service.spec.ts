@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Model } from 'mongoose';
+import { PaginationDto } from 'src/utilities/classes';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
 import { User, UserDocument } from './entities/user.entity';
@@ -14,9 +15,18 @@ describe('UserService', () => {
   let userModel: Model<UserDocument>;
   let jwtService: JwtService;
 
+  const mockQueryChain = {
+    select: jest.fn().mockReturnThis(),
+    skip: jest.fn().mockReturnThis(),
+    limit: jest.fn().mockReturnThis(),
+    sort: jest.fn().mockReturnThis(),
+  };
+
   const mockUserModel = {
     findOne: jest.fn(),
     create: jest.fn(),
+    find: jest.fn().mockReturnValue(mockQueryChain),
+    countDocuments: jest.fn(),
   };
 
   const mockJwtService = {
@@ -140,7 +150,6 @@ describe('UserService', () => {
       });
       expect(result).toEqual({
         message: 'Login successful',
-        user: mockUser,
       });
     });
 
@@ -172,6 +181,52 @@ describe('UserService', () => {
       expect(mockUser.passwordCheck).toHaveBeenCalledWith(loginDto.password);
       expect(mockJwtService.sign).not.toHaveBeenCalled();
       expect(mockResponse.cookie).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('findAll', () => {
+    const mockUsers = [
+      {
+        _id: '507f1f77bcf86cd799439011',
+        name: 'Jane Doe',
+        email: 'jane.doe@example.com',
+        role: UserRole.ADMIN,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        _id: '507f1f77bcf86cd799439012',
+        name: 'John Doe',
+        email: 'john.doe@example.com',
+        role: UserRole.MERCHANT,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ];
+
+    beforeEach(() => {
+      mockQueryChain.select.mockReturnValue(mockQueryChain);
+      mockQueryChain.skip.mockReturnValue(mockQueryChain);
+      mockQueryChain.limit.mockReturnValue(mockQueryChain);
+    });
+
+    it('should return all users with default pagination', async () => {
+      mockQueryChain.sort.mockResolvedValue(mockUsers);
+      mockUserModel.countDocuments.mockResolvedValue(2);
+
+      const paginationDto: PaginationDto = {};
+      const result = await service.findAll(paginationDto);
+
+      expect(mockUserModel.find).toHaveBeenCalledWith({});
+      expect(mockQueryChain.select).toHaveBeenCalledWith('-password');
+      expect(mockQueryChain.skip).toHaveBeenCalledWith(0);
+      expect(mockQueryChain.limit).toHaveBeenCalledWith(10);
+      expect(mockQueryChain.sort).toHaveBeenCalledWith(undefined);
+      expect(mockUserModel.countDocuments).toHaveBeenCalled();
+      expect(result).toEqual({
+        users: mockUsers,
+        total: 2,
+      });
     });
   });
 });

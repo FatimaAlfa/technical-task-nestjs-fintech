@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { PaginationDto } from 'src/utilities/classes';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
 import { User, UserDocument } from './entities/user.entity';
@@ -49,5 +50,31 @@ export class UserService {
     const token = this.jwtService.sign(payload);
     this.setJwtCookie(res, token);
     return { message: 'Login successful' };
+  }
+
+  async findAll(paginationDto: PaginationDto) {
+    const {
+      searchField,
+      searchText,
+      page = 1,
+      limit = 10,
+      sort,
+    } = paginationDto;
+    const query = {};
+    if (searchField && searchText) {
+      query[searchField] = { $regex: searchText, $options: 'i' };
+    }
+    const users = await this.userModel
+      .find(query)
+      .select('-password')
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .sort(sort);
+
+    const total = await this.userModel.countDocuments();
+    return {
+      users,
+      total,
+    };
   }
 }
