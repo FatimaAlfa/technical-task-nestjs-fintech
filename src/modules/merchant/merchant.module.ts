@@ -14,5 +14,6 @@ import { MerchantService } from './merchant.service';
   ],
   controllers: [MerchantController],
   providers: [MerchantService],
+  exports: [MerchantService],
 })
 export class MerchantModule {}

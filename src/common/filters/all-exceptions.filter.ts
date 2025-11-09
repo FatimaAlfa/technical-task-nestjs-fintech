@@ -11,9 +11,8 @@ import {
 export class AllExceptionsFilter implements ExceptionFilter {
   catch(exception: any, host: ArgumentsHost) {
     Logger.error(
-      '💥 ~ file: all-exceptions.filter.ts:12 ~ AllExceptionsFilter ~ exception:',
-      exception?.message || exception,
-      exception?.stack,
+      '~ file: all-exceptions.filter.ts:12 ~ AllExceptionsFilter ~ exception:',
+      exception,
     );
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();

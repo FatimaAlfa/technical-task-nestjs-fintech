@@ -33,7 +33,7 @@ export class MerchantController {
   @ApiOperation({ summary: 'Get a merchant by id' })
   @Get(':id')
   async findById(@Param('id') id: string, @GetUser() user: UserDocument) {
-    const merchant = await this.merchantService.findById(id);
+    const merchant = await this.merchantService.findOneWithoutPopulate(id);
     if (
       user.role !== UserRole.ADMIN &&
       merchant.userId.toString() !== user._id.toString()
@@ -53,7 +53,7 @@ export class MerchantController {
     @Body() updateMerchantDto: UpdateMerchantDto,
     @GetUser() user: UserDocument,
   ) {
-    const merchant = await this.merchantService.findById(id);
+    const merchant = await this.merchantService.findOneWithoutPopulate(id);
     if (
       user.role !== UserRole.ADMIN &&
       merchant.userId.toString() !== user._id.toString()

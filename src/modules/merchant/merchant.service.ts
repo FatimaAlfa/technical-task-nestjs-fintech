@@ -55,7 +55,7 @@ export class MerchantService {
       });
 
       await session.commitTransaction();
-      return { message: 'Merchant created successfully' };
+      return { message: 'Merchant created successfully', merchant };
     } catch (error) {
       await session.abortTransaction();
       throw error;
@@ -132,5 +132,13 @@ export class MerchantService {
     } finally {
       await session.endSession();
     }
+  }
+
+  async findOneWithoutPopulate(id: string) {
+    const merchant = await this.merchantModel.findById(id);
+    if (!merchant) {
+      throw new BadRequestException('Merchant not found');
+    }
+    return merchant;
   }
 }
