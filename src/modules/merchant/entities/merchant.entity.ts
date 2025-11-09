@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import mongoose, { HydratedDocument } from 'mongoose';
 import * as currencyCodes from 'currency-codes';
-import { User } from 'src/modules/user/entities/user.entity';
+import mongoose, { HydratedDocument } from 'mongoose';
+import { User } from '../../user/entities/user.entity';
 
 export type MerchantDocument = HydratedDocument<Merchant>;
 

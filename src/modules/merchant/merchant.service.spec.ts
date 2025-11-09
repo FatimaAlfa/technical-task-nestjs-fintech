@@ -101,7 +101,6 @@ describe('MerchantService', () => {
       name: 'Test Merchant',
       email: 'merchant@example.com',
       password: 'SecurePass123!',
-      confirmPassword: 'SecurePass123!',
       currency: 'USD',
       balance: 1000,
     };
@@ -151,7 +150,10 @@ describe('MerchantService', () => {
       });
       expect(mockSession.commitTransaction).toHaveBeenCalled();
       expect(mockSession.endSession).toHaveBeenCalled();
-      expect(result).toEqual({ message: 'Merchant created successfully' });
+      expect(result).toEqual({
+        message: 'Merchant created successfully',
+        merchant: mockMerchant,
+      });
     });
 
     it('should throw BadRequestException for unsupported currency', async () => {
