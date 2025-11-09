@@ -23,10 +23,15 @@ describe('UserService', () => {
     sort: jest.fn().mockReturnThis(),
   };
 
+  const mockFindByIdChain = {
+    select: jest.fn().mockReturnThis(),
+  };
+
   const mockUserModel = {
     findOne: jest.fn(),
     create: jest.fn(),
     find: jest.fn().mockReturnValue(mockQueryChain),
+    findById: jest.fn().mockReturnValue(mockFindByIdChain),
     countDocuments: jest.fn(),
   };
 
@@ -88,8 +93,14 @@ describe('UserService', () => {
     };
 
     it('should create a new user successfully', async () => {
+      const userWithoutPassword = {
+        ...createdUser,
+        password: undefined,
+      };
+
       mockUserModel.findOne.mockResolvedValue(null);
       mockUserModel.create.mockResolvedValue(createdUser);
+      mockFindByIdChain.select.mockResolvedValue(userWithoutPassword);
 
       const result = await service.create(createUserDto);
 
@@ -97,7 +108,9 @@ describe('UserService', () => {
         email: createUserDto.email,
       });
       expect(mockUserModel.create).toHaveBeenCalledWith(createUserDto);
-      expect(result).toEqual(createdUser);
+      expect(mockUserModel.findById).toHaveBeenCalledWith(createdUser._id);
+      expect(mockFindByIdChain.select).toHaveBeenCalledWith('-password');
+      expect(result).toEqual(userWithoutPassword);
     });
 
     it('should throw BadRequestException when user with email already exists', async () => {
@@ -111,6 +124,26 @@ describe('UserService', () => {
         email: createUserDto.email,
       });
       expect(mockUserModel.create).not.toHaveBeenCalled();
+    });
+
+    it('should throw BadRequestException when user cannot be retrieved after creation', async () => {
+      mockUserModel.findOne.mockResolvedValue(null);
+      mockUserModel.create.mockResolvedValue(createdUser);
+      mockFindByIdChain.select.mockResolvedValue(null);
+
+      await expect(service.create(createUserDto)).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(service.create(createUserDto)).rejects.toThrow(
+        'Failed to retrieve created user',
+      );
+
+      expect(mockUserModel.findOne).toHaveBeenCalledWith({
+        email: createUserDto.email,
+      });
+      expect(mockUserModel.create).toHaveBeenCalledWith(createUserDto);
+      expect(mockUserModel.findById).toHaveBeenCalledWith(createdUser._id);
+      expect(mockFindByIdChain.select).toHaveBeenCalledWith('-password');
     });
   });
 

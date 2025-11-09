@@ -2,9 +2,11 @@ import { Body, Controller, Get, Post, Query, Res } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { Public } from 'src/common/decorators/public.decorator';
+import { Roles } from 'src/common/decorators/roles.decorator';
 import { PaginationDto } from 'src/utilities/classes';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
+import { UserRole } from './enums/user.enum';
 import { UserService } from './user.service';
 
 @ApiTags('User')
@@ -29,7 +31,7 @@ export class UserController {
     res.json(result);
   }
 
-  @Public()
+  @Roles(UserRole.ADMIN)
   @Get()
   @ApiOperation({ summary: 'Get all users' })
   async findAll(@Query() paginationDto: PaginationDto) {

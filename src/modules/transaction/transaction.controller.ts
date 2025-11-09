@@ -90,7 +90,7 @@ export class TransactionController {
   }
 
   @ApiOperation({ summary: 'Get transactions by merchant id' })
-  @Roles(UserRole.MERCHANT, UserRole.ADMIN)
+  @Roles(UserRole.MERCHANT)
   @Get('merchant/:merchantId')
   async findByMerchantId(
     @Param('merchantId') merchantId: string,
@@ -99,7 +99,7 @@ export class TransactionController {
     const merchant =
       await this.merchantService.findOneWithoutPopulate(merchantId);
     if (
-      (user.role !== UserRole.MERCHANT && user.role !== UserRole.ADMIN) ||
+      user.role !== UserRole.MERCHANT ||
       merchant.userId.toString() !== user._id.toString()
     ) {
       throw new ForbiddenException(

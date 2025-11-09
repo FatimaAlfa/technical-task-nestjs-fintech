@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
 import { PassportModule } from '@nestjs/passport';
@@ -12,10 +13,12 @@ import { UserService } from './user.service';
   imports: [
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
     PassportModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     JwtModule.register({
       global: true,
-      secret:
-        'bea9f8e475b3fa4363eee67c3b2742628bc34bc7b6a0a45848814d269579c491b2044c35dd758773b4e21bb964cdcbe01721a568276e0bc0bcc9aea74fe37b53',
+      secret: `${process.env.JWT_SECRET}`,
       signOptions: { expiresIn: '1d' },
     }),
     AuditLogModule,

@@ -45,7 +45,14 @@ export class UserService {
       entityId: user._id,
       metadata: user,
     });
-    return user;
+
+    const createdUser = await this.userModel
+      .findById(user._id)
+      .select('-password');
+    if (!createdUser) {
+      throw new BadRequestException('Failed to retrieve created user');
+    }
+    return createdUser;
   }
 
   async login(loginDto: LoginDto, res: any) {

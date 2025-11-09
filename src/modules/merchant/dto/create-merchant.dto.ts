@@ -52,7 +52,7 @@ export class CreateMerchantDto {
   @Min(0)
   balance: number;
 
-  @ApiProperty({ type: String, example: 'Password123' })
+  @ApiProperty({ type: String, example: 'SecurePass123!' })
   @IsString()
   @Matches(
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=\[{\]};:'",<.>/?\\|`~]).{8,}$/,

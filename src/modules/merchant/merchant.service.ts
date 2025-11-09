@@ -48,8 +48,8 @@ export class MerchantService {
         password,
         role: UserRole.MERCHANT,
       });
-      const checkUser = await this.userService.findById(user._id);
-      if (!checkUser) {
+
+      if (!user) {
         throw new BadRequestException('Failed to create user');
       }
 

@@ -145,7 +145,6 @@ describe('MerchantService', () => {
 
     it('should create a merchant successfully', async () => {
       mockUserService.create.mockResolvedValue(mockUser);
-      mockUserService.findById.mockResolvedValue(mockUser);
       mockMerchantModel.create.mockResolvedValue(mockMerchant);
 
       const result = await service.create(createMerchantDto, mockAdmin);
@@ -158,7 +157,6 @@ describe('MerchantService', () => {
         password: createMerchantDto.password,
         role: UserRole.MERCHANT,
       });
-      expect(mockUserService.findById).toHaveBeenCalledWith(mockUser._id);
       expect(mockMerchantModel.create).toHaveBeenCalledWith({
         name: createMerchantDto.name,
         email: createMerchantDto.email,
@@ -193,8 +191,7 @@ describe('MerchantService', () => {
     });
 
     it('should throw BadRequestException when user creation fails', async () => {
-      mockUserService.create.mockResolvedValue(mockUser);
-      mockUserService.findById.mockResolvedValue(null);
+      mockUserService.create.mockResolvedValue(null);
 
       await expect(
         service.create(createMerchantDto, mockAdmin),
@@ -206,7 +203,6 @@ describe('MerchantService', () => {
       expect(mockConnection.startSession).toHaveBeenCalled();
       expect(mockSession.startTransaction).toHaveBeenCalled();
       expect(mockUserService.create).toHaveBeenCalled();
-      expect(mockUserService.findById).toHaveBeenCalled();
       expect(mockMerchantModel.create).not.toHaveBeenCalled();
       expect(mockSession.abortTransaction).toHaveBeenCalled();
       expect(mockSession.endSession).toHaveBeenCalled();
