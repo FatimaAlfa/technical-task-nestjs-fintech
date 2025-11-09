@@ -44,4 +44,4 @@ Swagger UI is protected by Basic Auth. Default credentials:
 - CORS is currently set to only allow `localhost:3050` - update this in `main.ts` if needed
 - Cookie parser is used for JWT tokens
 - all dtos' body are presented on swagger
-- dotenv variable are available in .env.sample file
+- dotenv variables are available in .env.sample file
