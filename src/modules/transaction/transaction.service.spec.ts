@@ -3,6 +3,7 @@ import { getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
 import axios from 'axios';
 import { Model } from 'mongoose';
+import { AuditLogService } from '../audit-log/audit-log.service';
 import { MerchantService } from '../merchant/merchant.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import {
@@ -37,8 +38,25 @@ describe('TransactionService', () => {
     email: 'merchant@test.com',
     currency: 'USD',
     balance: 1000,
+    userId: '507f1f77bcf86cd799439013',
     save: jest.fn().mockResolvedValue(true),
   } as any;
+
+  const mockAuditLogService = {
+    create: jest.fn().mockResolvedValue({}),
+  };
+
+  const mockTransactionModel = {
+    create: jest.fn(),
+    findById: jest.fn(),
+    find: jest.fn(),
+    findOne: jest.fn(),
+  };
+
+  const mockMerchantService = {
+    findById: jest.fn(),
+    validateCurrency: jest.fn(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -46,19 +64,15 @@ describe('TransactionService', () => {
         TransactionService,
         {
           provide: getModelToken(Transaction.name),
-          useValue: {
-            create: jest.fn(),
-            findById: jest.fn(),
-            find: jest.fn(),
-            findOne: jest.fn(),
-          },
+          useValue: mockTransactionModel,
         },
         {
           provide: MerchantService,
-          useValue: {
-            findById: jest.fn(),
-            validateCurrency: jest.fn(),
-          },
+          useValue: mockMerchantService,
+        },
+        {
+          provide: AuditLogService,
+          useValue: mockAuditLogService,
         },
       ],
     }).compile();
@@ -138,6 +152,7 @@ describe('TransactionService', () => {
         ...mockMerchant,
         currency: 'USD',
         balance: 1000,
+        userId: '507f1f77bcf86cd799439013',
       };
 
       const transactionWithMerchant = {
@@ -191,6 +206,7 @@ describe('TransactionService', () => {
         ...mockMerchant,
         currency: 'USD',
         balance: 1000,
+        userId: '507f1f77bcf86cd799439013',
       };
 
       const transactionWithMerchant = {
@@ -226,15 +242,21 @@ describe('TransactionService', () => {
 
   describe('triggerDecline', () => {
     it('should decline transaction successfully', async () => {
+      const merchantWithUserId = {
+        ...mockMerchant,
+        userId: '507f1f77bcf86cd799439013',
+      };
       const transactionWithMerchant = {
         ...mockTransaction,
-        merchantId: mockMerchant,
+        merchantId: merchantWithUserId,
         populate: jest.fn().mockReturnThis(),
       };
 
       transactionModel.findById.mockReturnValue({
         populate: jest.fn().mockResolvedValue(transactionWithMerchant),
       } as any);
+
+      merchantService.findById.mockResolvedValue(merchantWithUserId);
 
       const result = await service.triggerDecline(mockTransaction._id);
 

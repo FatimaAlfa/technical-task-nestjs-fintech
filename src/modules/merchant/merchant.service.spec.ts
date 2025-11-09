@@ -2,6 +2,7 @@ import { BadRequestException } from '@nestjs/common';
 import { getConnectionToken, getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Connection, Model } from 'mongoose';
+import { AuditLogService } from '../audit-log/audit-log.service';
 import { UserRole } from '../user/enums/user.enum';
 import { UserService } from '../user/user.service';
 import { CreateMerchantDto } from './dto/create-merchant.dto';
@@ -39,6 +40,10 @@ describe('MerchantService', () => {
     findByEmail: jest.fn(),
   };
 
+  const mockAuditLogService = {
+    create: jest.fn().mockResolvedValue({}),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -54,6 +59,10 @@ describe('MerchantService', () => {
         {
           provide: getConnectionToken(),
           useValue: mockConnection,
+        },
+        {
+          provide: AuditLogService,
+          useValue: mockAuditLogService,
         },
       ],
     }).compile();
@@ -125,12 +134,21 @@ describe('MerchantService', () => {
       updatedAt: new Date(),
     };
 
+    const mockAdmin = {
+      _id: '507f1f77bcf86cd799439010',
+      name: 'Admin User',
+      email: 'admin@example.com',
+      role: UserRole.ADMIN,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as any;
+
     it('should create a merchant successfully', async () => {
       mockUserService.create.mockResolvedValue(mockUser);
       mockUserService.findById.mockResolvedValue(mockUser);
       mockMerchantModel.create.mockResolvedValue(mockMerchant);
 
-      const result = await service.create(createMerchantDto);
+      const result = await service.create(createMerchantDto, mockAdmin);
 
       expect(mockConnection.startSession).toHaveBeenCalled();
       expect(mockSession.startTransaction).toHaveBeenCalled();
@@ -148,6 +166,7 @@ describe('MerchantService', () => {
         balance: createMerchantDto.balance,
         userId: mockUser._id,
       });
+      expect(mockAuditLogService.create).toHaveBeenCalled();
       expect(mockSession.commitTransaction).toHaveBeenCalled();
       expect(mockSession.endSession).toHaveBeenCalled();
       expect(result).toEqual({
@@ -159,10 +178,10 @@ describe('MerchantService', () => {
     it('should throw BadRequestException for unsupported currency', async () => {
       const invalidDto = { ...createMerchantDto, currency: 'INVALID' };
 
-      await expect(service.create(invalidDto)).rejects.toThrow(
+      await expect(service.create(invalidDto, mockAdmin)).rejects.toThrow(
         BadRequestException,
       );
-      await expect(service.create(invalidDto)).rejects.toThrow(
+      await expect(service.create(invalidDto, mockAdmin)).rejects.toThrow(
         'Unsupported currency',
       );
 
@@ -177,12 +196,12 @@ describe('MerchantService', () => {
       mockUserService.create.mockResolvedValue(mockUser);
       mockUserService.findById.mockResolvedValue(null);
 
-      await expect(service.create(createMerchantDto)).rejects.toThrow(
-        BadRequestException,
-      );
-      await expect(service.create(createMerchantDto)).rejects.toThrow(
-        'Failed to create user',
-      );
+      await expect(
+        service.create(createMerchantDto, mockAdmin),
+      ).rejects.toThrow(BadRequestException);
+      await expect(
+        service.create(createMerchantDto, mockAdmin),
+      ).rejects.toThrow('Failed to create user');
 
       expect(mockConnection.startSession).toHaveBeenCalled();
       expect(mockSession.startTransaction).toHaveBeenCalled();

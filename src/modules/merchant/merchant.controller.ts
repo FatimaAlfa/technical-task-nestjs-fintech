@@ -25,8 +25,11 @@ export class MerchantController {
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Create a new merchant' })
   @Post()
-  create(@Body() createMerchantDto: CreateMerchantDto) {
-    return this.merchantService.create(createMerchantDto);
+  create(
+    @Body() createMerchantDto: CreateMerchantDto,
+    @GetUser() user: UserDocument,
+  ) {
+    return this.merchantService.create(createMerchantDto, user);
   }
 
   @Roles(UserRole.ADMIN, UserRole.MERCHANT)

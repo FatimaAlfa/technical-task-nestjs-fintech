@@ -2,6 +2,11 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import axios from 'axios';
 import { Model } from 'mongoose';
+import { AuditLogService } from '../audit-log/audit-log.service';
+import {
+  AuditLogAction,
+  AuditLogEntityType,
+} from '../audit-log/enums/audit-log.enum';
 import { MerchantService } from '../merchant/merchant.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import {
@@ -16,6 +21,7 @@ export class TransactionService {
     @InjectModel(Transaction.name)
     private readonly transactionModel: Model<TransactionDocument>,
     private readonly merchantService: MerchantService,
+    private readonly auditLogService: AuditLogService,
   ) {}
 
   async create(createTransactionDto: CreateTransactionDto) {
@@ -37,6 +43,14 @@ export class TransactionService {
       currency,
       cardLast4,
       status: TransactionStatus.PENDING,
+    });
+
+    await this.auditLogService.create({
+      userId: merchant.userId,
+      action: AuditLogAction.TRANSACTION_CREATED,
+      entityType: AuditLogEntityType.TRANSACTION,
+      entityId: transaction._id,
+      metadata: transaction,
     });
 
     return { message: 'Transaction created successfully', transaction };
@@ -111,6 +125,15 @@ export class TransactionService {
 
     transaction.status = TransactionStatus.APPROVED;
     await transaction.save();
+
+    await this.auditLogService.create({
+      userId: merchant.userId,
+      action: AuditLogAction.TRANSACTION_APPROVED,
+      entityType: AuditLogEntityType.TRANSACTION,
+      entityId: transaction._id,
+      metadata: transaction,
+    });
+
     return { message: 'Transaction approved successfully', transaction };
   }
 
@@ -128,6 +151,18 @@ export class TransactionService {
 
     transaction.status = TransactionStatus.DECLINED;
     await transaction.save();
+
+    const merchant = await this.merchantService.findById(
+      transaction.merchantId,
+    );
+    await this.auditLogService.create({
+      userId: merchant.userId,
+      action: AuditLogAction.TRANSACTION_DECLINED,
+      entityType: AuditLogEntityType.TRANSACTION,
+      entityId: transaction._id,
+      metadata: transaction,
+    });
+
     return { message: 'Transaction declined successfully', transaction };
   }
 

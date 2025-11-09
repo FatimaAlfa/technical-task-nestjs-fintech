@@ -3,6 +3,11 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { PaginationDto } from 'src/utilities/classes';
+import { AuditLogService } from '../audit-log/audit-log.service';
+import {
+  AuditLogAction,
+  AuditLogEntityType,
+} from '../audit-log/enums/audit-log.enum';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
 import { User, UserDocument } from './entities/user.entity';
@@ -12,6 +17,7 @@ export class UserService {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
     private readonly jwtService: JwtService,
+    private readonly auditLogService: AuditLogService,
   ) {}
 
   private setJwtCookie(res: any, token: string) {
@@ -31,6 +37,14 @@ export class UserService {
       throw new BadRequestException('User with this email already exists');
     }
     const user = await this.userModel.create(createUserDto);
+
+    await this.auditLogService.create({
+      userId: user._id,
+      action: AuditLogAction.USER_CREATED,
+      entityType: AuditLogEntityType.USER,
+      entityId: user._id,
+      metadata: user,
+    });
     return user;
   }
 

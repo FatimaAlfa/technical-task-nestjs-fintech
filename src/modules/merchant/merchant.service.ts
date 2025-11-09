@@ -2,6 +2,12 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import * as currencyCodes from 'currency-codes';
 import { Connection, Model } from 'mongoose';
+import { AuditLogService } from '../audit-log/audit-log.service';
+import {
+  AuditLogAction,
+  AuditLogEntityType,
+} from '../audit-log/enums/audit-log.enum';
+import type { UserDocument } from '../user/entities/user.entity';
 import { UserRole } from '../user/enums/user.enum';
 import { UserService } from '../user/user.service';
 import { CreateMerchantDto } from './dto/create-merchant.dto';
@@ -15,6 +21,7 @@ export class MerchantService {
     private readonly merchantModel: Model<MerchantDocument>,
     private readonly userService: UserService,
     @InjectConnection() private readonly connection: Connection,
+    private readonly auditLogService: AuditLogService,
   ) {}
 
   validateCurrency(currency: string) {
@@ -25,7 +32,7 @@ export class MerchantService {
     return true;
   }
 
-  async create(createMerchantDto: CreateMerchantDto) {
+  async create(createMerchantDto: CreateMerchantDto, admin: UserDocument) {
     const session = await this.connection.startSession();
     session.startTransaction();
     try {
@@ -52,6 +59,14 @@ export class MerchantService {
         currency,
         balance,
         userId: user._id,
+      });
+
+      await this.auditLogService.create({
+        userId: admin._id,
+        action: AuditLogAction.MERCHANT_CREATED,
+        entityType: AuditLogEntityType.MERCHANT,
+        entityId: merchant._id,
+        metadata: merchant,
       });
 
       await session.commitTransaction();
@@ -124,6 +139,14 @@ export class MerchantService {
       }
 
       await merchant.save({ session });
+
+      await this.auditLogService.create({
+        userId: user._id,
+        action: AuditLogAction.MERCHANT_UPDATED,
+        entityType: AuditLogEntityType.MERCHANT,
+        entityId: merchant._id,
+        metadata: merchant,
+      });
       await session.commitTransaction();
       return { message: 'Merchant updated successfully', merchant };
     } catch (error) {

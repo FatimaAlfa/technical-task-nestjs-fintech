@@ -7,6 +7,7 @@ import { RolesGuard } from './common/guards/roles.guard';
 import { MerchantModule } from './modules/merchant/merchant.module';
 import { UserModule } from './modules/user/user.module';
 import { TransactionModule } from './modules/transaction/transaction.module';
+import { AuditLogModule } from './modules/audit-log/audit-log.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { TransactionModule } from './modules/transaction/transaction.module';
     UserModule,
     MerchantModule,
     TransactionModule,
+    AuditLogModule,
   ],
   controllers: [],
   providers: [
